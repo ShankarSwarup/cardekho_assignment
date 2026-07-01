@@ -4,7 +4,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
-    "rootDir": "./src",
     "outDir": "./dist",
 
     "lib": ["ES2022"],
@@ -18,20 +17,11 @@
     "skipLibCheck": true,
 
     "declaration": true,
-    "sourceMap": true,
-
-    "baseUrl": ".",
-    "paths": {
-      "@automatch/types": ["../../packages/types/src"],
-      "@automatch/utils": ["../../packages/utils/src"]
-    }
+    "sourceMap": true
   },
-
   "include": ["src/**/*"],
-
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts"
+    "dist"
   ]
 }
