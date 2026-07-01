@@ -22,6 +22,9 @@
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/utils/check_images.ts",
+    "src/utils/test_all_apis.ts",
+    "src/utils/test_api_endpoint.ts"
   ]
 }
