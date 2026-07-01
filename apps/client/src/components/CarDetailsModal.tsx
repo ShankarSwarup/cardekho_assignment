@@ -26,23 +26,25 @@ export const CarDetailsModal: React.FC = () => {
   } = useCars();
 
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [images, setImages] = useState<string[]>([]);
 
   // Reset carousel index to 0 whenever the selected vehicle changes
   useEffect(() => {
     setCurrentImgIdx(0);
+    if(selectedCar) {
+      // Build resilient image list (handles arrays, single strings, and empty cases)
+      if (Array.isArray(selectedCar.images) && selectedCar.images.length > 0) {
+        setImages(selectedCar.images);
+      } else if (typeof selectedCar.images === 'string' && selectedCar.images) {
+        setImages([selectedCar.images]);
+      } else {
+        setImages(['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80']);
+      }
+    }
   }, [selectedCar?._id]);
 
   if (!selectedCar) return null;
 
-  // Build resilient image list (handles arrays, single strings, and empty cases)
-  let images: string[] = [];
-  if (Array.isArray(selectedCar.images) && selectedCar.images.length > 0) {
-    images = selectedCar.images;
-  } else if (typeof selectedCar.images === 'string' && selectedCar.images) {
-    images = [selectedCar.images];
-  } else {
-    images = ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'];
-  }
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -98,11 +100,11 @@ export const CarDetailsModal: React.FC = () => {
         </div>
 
         {/* Multi-Image Carousel Panel */}
-        <div className="relative w-full h-56 rounded-lg overflow-hidden group border border-slate-100 bg-slate-50">
+        <div className="relative w-full rounded-lg group border border-slate-100 bg-slate-50" style={{ height: '156px' }}>
           <img
             src={images[currentImgIdx]}
             alt={`${selectedCar.make} ${selectedCar.model} slide`}
-            className="w-full h-full object-cover transition-all duration-300"
+            className="w-full h-full object-contain transition-all duration-300"
           />
           {images.length > 1 && (
             <>

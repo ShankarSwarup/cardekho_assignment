@@ -180,7 +180,6 @@ export const BrowseCars: React.FC = () => {
                 value={filterBrand}
                 onChange={(e) => {
                   setFilterBrand(e.target.value);
-                  setCurrentPage(1);
                 }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
@@ -200,7 +199,6 @@ export const BrowseCars: React.FC = () => {
                 <button
                   onClick={() => {
                     setFilterFuel('Any');
-                    setCurrentPage(1);
                   }}
                   className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${
                     filterFuel === 'Any'
@@ -215,7 +213,6 @@ export const BrowseCars: React.FC = () => {
                     key={f}
                     onClick={() => {
                       setFilterFuel(f);
-                      setCurrentPage(1);
                     }}
                     className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${
                       filterFuel === f
@@ -236,7 +233,6 @@ export const BrowseCars: React.FC = () => {
                 <button
                   onClick={() => {
                     setFilterTransmission('Any');
-                    setCurrentPage(1);
                   }}
                   className={`py-1.5 rounded-lg text-[10px] font-semibold border transition ${
                     filterTransmission === 'Any'
@@ -251,7 +247,6 @@ export const BrowseCars: React.FC = () => {
                     key={t}
                     onClick={() => {
                       setFilterTransmission(t);
-                      setCurrentPage(1);
                     }}
                     className={`py-1.5 rounded-lg text-[10px] font-semibold border transition ${
                       filterTransmission === t
@@ -279,7 +274,6 @@ export const BrowseCars: React.FC = () => {
                     key={perf.value}
                     onClick={() => {
                       setFilterPerformance(perf.value);
-                      setCurrentPage(1);
                     }}
                     className={`px-1.5 py-1.5 rounded-lg text-[10px] font-semibold border transition text-center ${
                       filterPerformance === perf.value
@@ -304,7 +298,6 @@ export const BrowseCars: React.FC = () => {
                   value={filterMinPrice}
                   onChange={(e) => {
                     setFilterMinPrice(e.target.value);
-                    setCurrentPage(1);
                   }}
                   className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500"
                 />
@@ -316,7 +309,6 @@ export const BrowseCars: React.FC = () => {
                   value={filterMaxPrice}
                   onChange={(e) => {
                     setFilterMaxPrice(e.target.value);
-                    setCurrentPage(1);
                   }}
                   className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500"
                 />
@@ -335,7 +327,6 @@ export const BrowseCars: React.FC = () => {
                 value={sortBy}
                 onChange={(e) => {
                   setSortBy(e.target.value);
-                  setCurrentPage(1);
                 }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:outline-none"
               >
@@ -347,7 +338,6 @@ export const BrowseCars: React.FC = () => {
                 <button
                   onClick={() => {
                     setSortOrder('asc');
-                    setCurrentPage(1);
                   }}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition ${
                     sortOrder === 'asc'
@@ -360,7 +350,6 @@ export const BrowseCars: React.FC = () => {
                 <button
                   onClick={() => {
                     setSortOrder('desc');
-                    setCurrentPage(1);
                   }}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition ${
                     sortOrder === 'desc'
@@ -647,7 +636,7 @@ export const BrowseCars: React.FC = () => {
           </div>
         ) : (
           /* SMART ADVISOR VIEWPORT (Fixed Height & Scrollable) */
-          <div className="h-[calc(100vh-270px)] overflow-y-auto pr-1 mt-4 space-y-4">
+          <div className="h-[calc(100vh-135px)] overflow-y-auto pr-1 mt-4 space-y-4">
             <div className="space-y-6 pb-6">
               {advisorLoading ? (
                 <div className="glass-panel p-12 text-center space-y-4">
