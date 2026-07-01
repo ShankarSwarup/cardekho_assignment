@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { Review as IReview } from '@automatch/types';
+import { Review as IReview } from '../types/index.js';
 
 const reviewSchema = new Schema<IReview>({
   userId: { type: Schema.Types.ObjectId as any, ref: 'User', required: true, index: true },

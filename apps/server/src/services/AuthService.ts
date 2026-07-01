@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/UserRepository.js';
-import { User as IUser } from '@automatch/types';
+import { User as IUser } from '../types/index.js';
 import { AuthenticationError } from '../middleware/error.js';
 
 export class AuthService {

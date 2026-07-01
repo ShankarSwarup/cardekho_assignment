@@ -73,6 +73,43 @@ export const AuthProvider = ({ children }) => {
             setAuthError(err.response?.data?.message || 'Login credentials invalid');
         }
     };
+    const handleRegister = async (fullName, email, password) => {
+        setAuthError('');
+        try {
+            const res = await axios.post(`${BASE_URL}/auth/register`, {
+                fullName,
+                email,
+                password
+            });
+            if (res.data.success) {
+                // Automatically login user after successful signup
+                const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
+                    email,
+                    password
+                });
+                if (loginRes.data.success) {
+                    const loggedUser = loginRes.data.data.user;
+                    const loggedToken = loginRes.data.data.accessToken;
+                    setUser(loggedUser);
+                    setToken(loggedToken);
+                    localStorage.setItem('token', loggedToken);
+                    localStorage.setItem('user', JSON.stringify(loggedUser));
+                    setLoginEmail('');
+                    setLoginPassword('');
+                    setShowLoginModal(false);
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (err) {
+            const errMsg = err.response?.data?.message ||
+                (err.response?.data?.errors && err.response.data.errors[0]?.message) ||
+                'Registration failed';
+            setAuthError(errMsg);
+            return false;
+        }
+    };
     const handleLogout = async () => {
         try {
             await axios.post(`${BASE_URL}/auth/logout`);
@@ -99,6 +136,7 @@ export const AuthProvider = ({ children }) => {
             setShowLoginModal,
             setAuthError,
             handleLogin,
+            handleRegister,
             handleLogout,
             setUser
         }, children: children }));

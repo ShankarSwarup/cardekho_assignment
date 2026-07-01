@@ -11,6 +11,7 @@ interface AuthContextType {
     setShowLoginModal: (show: boolean) => void;
     setAuthError: (error: string) => void;
     handleLogin: (e: React.FormEvent | null) => Promise<void>;
+    handleRegister: (fullName: string, email: string, password: string) => Promise<boolean>;
     handleLogout: () => Promise<void>;
     setUser: (user: any) => void;
 }

@@ -268,18 +268,56 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentPage(1);
   }, []);
 
-  // Sync wishlist whenever user changes
+  // Fetch recommendation sessions history
+  const fetchConsultationHistory = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/recommendations/history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setConsultationHistory(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch recommendation history:', err);
+    }
+  }, [token]);
+
+  // Fetch user's wishlist from backend
+  const fetchWishlist = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/cars/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        const cars = res.data.data || [];
+        setWishlistCars(cars);
+        setWishlistIds(cars.map((c: any) => c._id));
+      }
+    } catch (err) {
+      console.error('Failed to fetch wishlist:', err);
+    }
+  }, [token]);
+
+  // Sync wishlist and history whenever token changes
   useEffect(() => {
-    if (user) {
-      setWishlistIds(user.wishlist?.map((c: any) => c._id || c) || []);
-      setWishlistCars(user.wishlist || []);
+    if (token) {
+      fetchWishlist();
       fetchConsultationHistory();
     } else {
       setWishlistIds([]);
       setWishlistCars([]);
       setConsultationHistory([]);
     }
-  }, [user]);
+  }, [token, fetchWishlist, fetchConsultationHistory]);
+
+  // Fetch wishlist dynamically when active tab changes to wishlist
+  useEffect(() => {
+    if (activeTab === 'wishlist' && token) {
+      fetchWishlist();
+    }
+  }, [activeTab, token, fetchWishlist]);
 
   // Fetch filters on mount and run initial catalog search
   useEffect(() => {
@@ -292,7 +330,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [fetchCars]);
 
   // Toggle wishlist synchronization
-  const handleToggleWishlist = async (carId: string) => {
+  const handleToggleWishlist = useCallback(async (carId: string) => {
     if (!user) {
       setShowLoginModal(true);
       return;
@@ -304,7 +342,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await axios.post(
         `${BASE_URL}/cars/wishlist`,
-        { carId, action }
+        { carId, action },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (res.data.success) {
@@ -312,14 +351,16 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const updatedUser = res.data.data;
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Instantly reload wishlist details from backend database
+        fetchWishlist();
       }
     } catch (err) {
       console.error('Wishlist modification error:', err);
     }
-  };
+  }, [user, wishlistIds, token, fetchWishlist, setUser, setShowLoginModal]);
 
   // Select / Unselect vehicles for comparison
-  const handleToggleSelectCompare = (car: any) => {
+  const handleToggleSelectCompare = useCallback((car: any) => {
     const isSelected = selectedForCompare.some((c) => c._id === car._id);
     if (isSelected) {
       setSelectedForCompare((prev) => prev.filter((c) => c._id !== car._id));
@@ -330,10 +371,10 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       setSelectedForCompare((prev) => [...prev, car]);
     }
-  };
+  }, [selectedForCompare, setSelectedForCompare]);
 
   // Fetch comparison spec details
-  const triggerComparisonFetch = async () => {
+  const triggerComparisonFetch = useCallback(async () => {
     if (selectedForCompare.length === 0) return;
     setLoadingCompare(true);
     try {
@@ -348,10 +389,10 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setLoadingCompare(false);
     }
-  };
+  }, [selectedForCompare, setActiveTab]);
 
   // Fetch reviews list for a selected vehicle
-  const fetchCarReviews = async (carId: string) => {
+  const fetchCarReviews = useCallback(async (carId: string) => {
     setReviewsLoading(true);
     setReviewError('');
     try {
@@ -365,23 +406,23 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setReviewsLoading(false);
     }
-  };
+  }, []);
 
-  const openCarDetails = (car: any) => {
+  const openCarDetails = useCallback((car: any) => {
     setSelectedCar(car);
     setReviewRating(5);
     setReviewText('');
     setReviewError('');
     fetchCarReviews(car._id);
-  };
+  }, [fetchCarReviews]);
 
-  const closeCarDetails = () => {
+  const closeCarDetails = useCallback(() => {
     setSelectedCar(null);
     setCarReviews([]);
     setReviewError('');
-  };
+  }, []);
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
+  const handleSubmitReview = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCar) return;
     if (!user) {
@@ -399,6 +440,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await axios.post(`${BASE_URL}/cars/${selectedCar._id}/reviews`, {
         rating: reviewRating,
         review: reviewText.trim()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
         setReviewText('');
@@ -410,22 +453,24 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setReviewSubmitting(false);
     }
-  };
+  }, [selectedCar, user, reviewText, reviewRating, token, fetchCarReviews, setShowLoginModal]);
 
-  const handleDeleteReview = async (reviewId: string) => {
+  const handleDeleteReview = useCallback(async (reviewId: string) => {
     if (!token) return;
     try {
-      await axios.delete(`${BASE_URL}/reviews/${reviewId}`);
+      await axios.delete(`${BASE_URL}/reviews/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (selectedCar) {
         fetchCarReviews(selectedCar._id);
       }
     } catch (err) {
       console.error('Failed to delete review:', err);
     }
-  };
+  }, [token, selectedCar, fetchCarReviews]);
 
   // Smart Consultation computations
-  const handleGenerateRecommendations = async (e: React.FormEvent) => {
+  const handleGenerateRecommendations = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       setShowLoginModal(true);
@@ -441,6 +486,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dailyDistance: wizardDailyDistance,
         priority: wizardPriority,
         brandPreference: wizardBrandPref || undefined
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (res.data.success) {
@@ -453,19 +500,19 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setAdvisorLoading(false);
     }
-  };
-
-  const fetchConsultationHistory = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(`${BASE_URL}/recommendations/history`);
-      if (res.data.success) {
-        setConsultationHistory(res.data.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch recommendation history:', err);
-    }
-  };
+  }, [
+    user,
+    wizardBudget,
+    wizardFamilySize,
+    wizardFuel,
+    wizardTransmission,
+    wizardDailyDistance,
+    wizardPriority,
+    wizardBrandPref,
+    token,
+    fetchConsultationHistory,
+    setShowLoginModal
+  ]);
 
   return (
     <CarContext.Provider

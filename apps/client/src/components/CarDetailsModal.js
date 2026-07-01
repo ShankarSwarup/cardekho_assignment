@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, MessageSquare, Star, Trash2, AlertCircle, Heart, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCars } from '../contexts/CarContext';
@@ -8,11 +8,23 @@ export const CarDetailsModal = () => {
     const { user } = useAuth();
     const { selectedCar, closeCarDetails, carReviews, reviewsLoading, reviewRating, setReviewRating, reviewText, setReviewText, reviewSubmitting, reviewError, handleSubmitReview, handleDeleteReview, wishlistIds, handleToggleWishlist, selectedForCompare, handleToggleSelectCompare } = useCars();
     const [currentImgIdx, setCurrentImgIdx] = useState(0);
+    // Reset carousel index to 0 whenever the selected vehicle changes
+    useEffect(() => {
+        setCurrentImgIdx(0);
+    }, [selectedCar?._id]);
     if (!selectedCar)
         return null;
-    const images = selectedCar.images && selectedCar.images.length > 0
-        ? selectedCar.images
-        : ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'];
+    // Build resilient image list (handles arrays, single strings, and empty cases)
+    let images = [];
+    if (Array.isArray(selectedCar.images) && selectedCar.images.length > 0) {
+        images = selectedCar.images;
+    }
+    else if (typeof selectedCar.images === 'string' && selectedCar.images) {
+        images = [selectedCar.images];
+    }
+    else {
+        images = ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'];
+    }
     const handlePrevImage = (e) => {
         e.stopPropagation();
         setCurrentImgIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));

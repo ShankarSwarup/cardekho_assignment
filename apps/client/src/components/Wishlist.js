@@ -19,7 +19,6 @@ export const Wishlist = () => {
                                                             ...prev.filter((c) => c._id !== car._id),
                                                             car
                                                         ]);
-                                                        setActiveTab('compare');
                                                     }, className: "px-4 py-1.5 rounded bg-brand-50 border border-brand-200 text-brand-600 hover:bg-brand-100 text-xs font-semibold", children: "Compare" })] })] })] })] }, car._id))) }))] }));
 };
 //# sourceMappingURL=Wishlist.js.map

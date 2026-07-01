@@ -1,5 +1,5 @@
 import { ReviewModel } from '../models/Review.js';
-import { Review as IReview } from '@automatch/types';
+import { Review as IReview } from '../types/index.js';
 
 export class ReviewRepository {
   async findByCarId(carId: string): Promise<IReview[]> {

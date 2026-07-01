@@ -1,4 +1,4 @@
-import { Car as ICar, User as IUser, Review as IReview } from '@automatch/types';
+import { Car as ICar, User as IUser, Review as IReview } from '../types/index.js';
 
 export const MOCK_CARS: ICar[] = [
   {

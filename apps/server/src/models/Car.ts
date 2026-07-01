@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { Car as ICar } from '@automatch/types';
+import { Car as ICar } from '../types/index.js';
 
 const carSchema = new Schema<ICar>({
   make: { type: String, required: true, index: true },

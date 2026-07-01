@@ -12,8 +12,6 @@
     "test": "mocha --import=tsx src/tests/**/*.test.ts --timeout 10000 --exit"
   },
   "dependencies": {
-    "@automatch/types": "*",
-    "@automatch/utils": "*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { RecommendationSession as IRecommendationSession } from '@automatch/types';
+import { RecommendationSession as IRecommendationSession } from '../types/index.js';
 
 const recommendationSchema = new Schema<IRecommendationSession>({
   userId: { type: Schema.Types.ObjectId as any, ref: 'User', required: true, index: true },

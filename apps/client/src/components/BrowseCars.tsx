@@ -130,7 +130,7 @@ export const BrowseCars: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       
       {/* Sidebar Section */}
-      <div className="glass-panel p-6 space-y-6 h-fit max-h-[80vh] overflow-y-auto lg:sticky lg:top-24">
+      <div className="glass-panel p-6 space-y-6 h-fit max-h-[84vh] overflow-y-auto lg:sticky lg:top-24">
         
         {/* Search Mode Toggler inside sidebar for clean layout */}
         <div className="flex bg-slate-100 p-1 rounded-lg">
@@ -519,6 +519,7 @@ export const BrowseCars: React.FC = () => {
       <div className="lg:col-span-3 flex flex-col">
         
         {/* Sticky Search Header */}
+        {searchMode === 'catalog' ?
         <div className="sticky top-16 bg-slate-50/95 backdrop-blur-sm z-30 pb-4 pt-1 border-b border-slate-200">
           <form onSubmit={handleSearchSubmit} className="flex space-x-2">
             <div className="relative flex-grow">
@@ -538,21 +539,17 @@ export const BrowseCars: React.FC = () => {
               <span>Find</span>
             </button>
           </form>
-        </div>
+        </div> : <></>}
 
-        {/* Dynamic Cards Viewport - Fixed Height & Handles scroll properly */}
-        <div className="h-[calc(100vh-270px)] overflow-y-auto pr-1 mt-4 space-y-4">
-          
-          {searchMode === 'catalog' ? (
-            /* CATALOG GRID VIEW */
-            <>
+        {searchMode === 'catalog' ? (
+          /* CATALOG VIEW WITH STICKY PAGINATION AT BOTTOM */
+          <div className="flex flex-col h-[calc(100vh-200px)] mt-4">
+            
+            {/* Scrollable Cards Grid */}
+            <div className="flex-grow overflow-y-auto pr-1 space-y-4">
               <div className="flex justify-between items-center text-xs text-slate-500 mb-2">
                 <span>
                   Displaying <b>{cars.length}</b> of <b>{totalCars}</b> vehicles matches
-                </span>
-                <span className="flex items-center space-x-1.5">
-                  <Activity className="h-3.5 w-3.5 text-brand-600" />
-                  <span>Real-time API response: &lt;100ms</span>
                 </span>
               </div>
 
@@ -571,7 +568,7 @@ export const BrowseCars: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-4">
                   {cars.map((car) => (
                     <div
                       key={car._id}
@@ -623,28 +620,34 @@ export const BrowseCars: React.FC = () => {
                   ))}
                 </div>
               )}
+            </div>
 
-              {/* Pagination controls */}
-              <div className="flex items-center justify-between pt-6 border-t border-slate-200 mt-6 pb-6">
+            {/* Sticky Pagination Controls - Next Section, Fixed at Bottom */}
+            {cars.length > 0 && (
+              <div className="flex items-center justify-between py-3 border-t border-slate-200 bg-slate-50/95 backdrop-blur-sm z-20 mt-2">
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 text-slate-600"
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 text-slate-600 transition shadow-sm animate-none"
                 >
                   Previous Page
                 </button>
-                <span className="text-xs text-slate-500">Page {currentPage}</span>
+                <span className="text-xs font-bold text-slate-650 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+                  Page {currentPage}
+                </span>
                 <button
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                   disabled={!hasNextPage}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 text-slate-600"
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 text-slate-600 transition shadow-sm animate-none"
                 >
                   Next Page
                 </button>
               </div>
-            </>
-          ) : (
-            /* SMART ADVISOR SHORTLIST VIEW */
+            )}
+          </div>
+        ) : (
+          /* SMART ADVISOR VIEWPORT (Fixed Height & Scrollable) */
+          <div className="h-[calc(100vh-270px)] overflow-y-auto pr-1 mt-4 space-y-4">
             <div className="space-y-6 pb-6">
               {advisorLoading ? (
                 <div className="glass-panel p-12 text-center space-y-4">
@@ -769,7 +772,7 @@ export const BrowseCars: React.FC = () => {
                         {consultationHistory.slice(0, 4).map((hist) => (
                           <div key={hist._id} className="glass-panel p-4 text-xs space-y-2 bg-slate-50/50">
                             <div className="flex justify-between text-slate-400">
-                              <span>📅 {new Date(hist.createdAt).toLocaleDateString()}</span>
+                              <span>📅 {new Date(hist.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                               <span>Budget: ₹{hist.preferences?.budget?.toLocaleString()}</span>
                             </div>
                             <p className="text-slate-600 line-clamp-2">
@@ -783,8 +786,8 @@ export const BrowseCars: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

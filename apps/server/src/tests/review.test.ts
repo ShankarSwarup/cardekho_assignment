@@ -62,7 +62,10 @@ describe('Wishlist & Reviews API Endpoint Tests (Mocked DB)', () => {
     };
 
     UserRepository.prototype.findById = async function() {
-      return mockUser as any;
+      return {
+        ...mockUser,
+        wishlist: [mockCar]
+      } as any;
     };
 
     ReviewRepository.prototype.findById = async function() {
@@ -138,5 +141,16 @@ describe('Wishlist & Reviews API Endpoint Tests (Mocked DB)', () => {
 
     expect(res.status).to.equal(200);
     expect(res.body.success).to.be.true;
+  });
+
+  it('should fetch user wishlist successfully', async () => {
+    const res = await request(app)
+      .get('/api/v1/cars/wishlist')
+      .set('Authorization', 'Bearer mock-token');
+
+    expect(res.status).to.equal(200);
+    expect(res.body.success).to.be.true;
+    expect(res.body.data).to.be.an('array');
+    expect(res.body.data[0]._id).to.equal(mockCar._id);
   });
 });

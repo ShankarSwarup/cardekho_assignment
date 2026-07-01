@@ -8,7 +8,7 @@ This document describes the end-to-end flows, pipelines, request lifecycles, and
 1. [Overall System Flow](#1-overall-system-flow)
 2. [Request Lifecycle & Data Flow](#2-request-lifecycle--data-flow)
 3. [Authentication Flow](#3-authentication-flow)
-4. [Smart Recommendation Flow & Pipeline](#4-ai-recommendation-flow--pipeline)
+4. [Smart Recommendation Flow & Pipeline](#4-recommendation-flow--pipeline)
 5. [Search & Discovery Flow](#5-search--discovery-flow)
 6. [Car Comparison Flow](#6-car-comparison-flow)
 7. [Wishlist Flow](#7-wishlist-flow)
@@ -26,11 +26,11 @@ flowchart TD
     User([User]) --> LP[Landing Page]
     
     LP --> Search[Search & Filter Cars]
-    LP --> AskAI[Ask Smart Recommendation]
+    LP --> AskRec[Ask Smart Recommendation]
     LP --> Browse[Browse by Categories]
     
     Search --> RecommendEngine[Recommendation Engine]
-    AskAI --> RecommendEngine
+    AskRec --> RecommendEngine
     Browse --> RecommendEngine
     
     RecommendEngine --> Shortlist[Ranked Shortlisted Cars]
@@ -51,15 +51,14 @@ This details the lifecycle of a request as it passes from the client browser int
 graph TD
     Browser["Client Browser (React Form)"] --> Router["React Router (Routing)"]
     Router --> RQ["React Query (Server State Cache)"]
-    RQ --> Axios["Axios Client (Interceptors: JWT, Refresh, Errors)"]
-    Axios --> Route["Express Route Endpoint"]
+    Axios["Axios Client (Interceptors: JWT, 401 Response, Errors)"] --> Route["Express Route Endpoint"]
     Route --> Logger["Request Logger (Winston with traceId)"]
     Logger --> Limiter["Rate Limiter Middleware"]
     Limiter --> Security["Security Headers (Helmet / CORS)"]
     Security --> Auth["Authentication Middleware (JWT verification)"]
     Auth --> Validation["Validation Middleware (Zod schema checking)"]
     Validation --> Controller["Controller (Parse request, delegate logic)"]
-    Controller --> Service["Service Layer (Business logic, transactions, AI orchestration)"]
+    Controller --> Service["Service Layer (Business logic, transactions, scoring orchestration)"]
     Service --> Repo["Repository Layer (Mongoose queries)"]
     Repo --> DB[(MongoDB Atlas Database)]
     
@@ -76,7 +75,7 @@ graph TD
 ---
 
 ## 3. Authentication Flow
-The authentication flow utilizes secure JSON Web Tokens (JWT) with short-lived access tokens and secure, HTTP-only refresh tokens.
+The authentication flow utilizes secure JSON Web Tokens (JWT) with access tokens and refresh cookies. A client-side global response interceptor watches for 401 status codes to handle stale sessions.
 
 ```mermaid
 sequenceDiagram
@@ -106,9 +105,9 @@ sequenceDiagram
                 FE-->>User: Display "Invalid credentials"
             else Credentials Valid
                 BE->>BE: Generate JWT Access Token (Short-lived)
-                BE->>BE: Generate Refresh Token (Secure, HttpOnly Cookie)
-                BE-->>FE: Return 200 OK + Access Token & Set HttpOnly Cookie
-                FE->>FE: Store Access Token in Redux State
+                BE->>BE: Generate Refresh Token
+                BE-->>FE: Return 200 OK + Access Token
+                FE->>FE: Store Access Token in Local Storage & Context
                 FE->>FE: Redirect to Dashboard
                 FE-->>User: Render Dashboard / Profile
             end
@@ -118,8 +117,8 @@ sequenceDiagram
 
 ---
 
-## 4. Smart Recommendation Flow & Pipeline
-AutoMatch Pro utilizes a hybrid recommendation strategy. Deterministic business rules score and filter candidate vehicles from the database *before* sending them to the Large Language Model (LLM). This optimization lowers API costs, speeds up performance, and prevents hallucinated specifications.
+## 4. Recommendation Flow & Pipeline
+AutoMatch Pro utilizes a rule-based recommendation strategy. Business rules score and filter candidate vehicles from the database to rank and extract explanations.
 
 ```mermaid
 sequenceDiagram
@@ -128,33 +127,22 @@ sequenceDiagram
     participant FE as React Frontend
     participant BE as Express Backend
     participant DB as MongoDB
-    participant AI as OpenAI API
     
     User->>FE: Submit Preference Form (Budget, Family Size, Driving Habits, etc.)
     FE->>FE: Client-side validation
     FE->>BE: POST /api/v1/recommendations
-    BE->>BE: Zod Validation & Request Sanitization (Prompt injection protection)
+    BE->>BE: Zod Validation & Request Sanitization
     BE->>BE: Apply Weighted Business Scoring rules (Budget, Safety, Mileage)
     BE->>DB: Fetch Candidate Cars matching basic parameters
     DB-->>BE: Return matching Candidate Car list
     BE->>BE: Filter & Score Candidates (Rank top matching cars)
-    BE->>BE: Prompt Builder (Combines system instructions & verified car specs)
-    BE->>AI: Send Prompt to OpenAI Chat Completion (Temp: 0.2, JSON mode)
-    AI-->>BE: Return JSON (Why selected, trade-offs, suitable use cases)
-    BE->>BE: JSON Parser (Validate response schema & structure)
-    
-    alt AI Validation & Parsing Successful
-        BE->>DB: Log recommendation history for session
-        DB-->>BE: Acknowledge log
-        BE-->>FE: Return 200 OK + Structured Recommendation JSON
-    else AI Parsing or Service Fails (Fallback)
-        BE->>BE: Trigger Fallback Strategy (Rule-Based Candidate Selection)
-        BE-->>FE: Return 200 OK + Rule-Based Recommendations (with generic explanation)
-    end
-    
-    FE->>FE: Cache response using TanStack Query
+    BE->>BE: Rule-Based Explanations Builder (Hydrates specifications & trade-offs)
+    BE->>DB: Log recommendation history for session
+    DB-->>BE: Acknowledge log
+    BE-->>FE: Return 200 OK + Structured Recommendation JSON
+    FE->>FE: Cache response
     FE->>FE: Render Recommendation Cards (Trade-offs & reasons)
-    FE-->>User: Display Smart Recommendations
+    FE-->>User: Display Recommendations
 ```
 
 ### Recommendation Input Variables:
@@ -167,19 +155,39 @@ sequenceDiagram
 - **Mileage priority**: Fuel economy weight.
 - **Brand preference (optional)**: Direct filter or score boost.
 
-### Business Scoring Weight Weights:
-- Budget Match: **30%**
-- Safety Rating: **20%**
-- Mileage: **15%**
-- Fuel Preference: **10%**
-- Transmission: **10%**
-- Seating Capacity: **10%**
-- User Preferences: **5%**
+### Business Scoring Logic & Numerical Weights (Max 100 Points):
+
+1. **Price Match (Max 35 Points)**:
+   - If the car's price is within budget:
+     - If the price-to-budget ratio is `>= 0.6` (i.e. close to the target budget indicating a segment fit): **35 Points**
+     - Otherwise, the score scales down linearly: `15 + Math.round(20 * (ratio / 0.6))` Points (guaranteeing at least **15 Points**).
+   - If the car's price exceeds the budget but is within `1.2 * budget` (buffer limit):
+     - The score scales down linearly based on excess: `20 - Math.round(15 * excessRatio)` Points.
+   - If the car's price exceeds `1.2 * budget`: **0 Points**.
+
+2. **Seating Capacity Match (Max 20 Points)**:
+   - If the vehicle's seating capacity exactly equals the family size: **20 Points**.
+   - If the vehicle's capacity exceeds the family size (extra space): **15 Points**.
+   - If the vehicle's capacity is lower than the family size: **0 Points** (does not fit).
+
+3. **Priority Match (Max 25 Points)**:
+   - Based on the user's primary concern (`Safety`, `Mileage`, `Budget`, or `Performance`):
+     - **Safety**: 5-star NCAP = **25 Points**, 4-star = **18 Points**, 3-star = **10 Points**, lower = **3 Points**.
+     - **Mileage**: `>= 22 km/l` = **25 Points**, `>= 18 km/l` = **20 Points**, `>= 15 km/l` = **12 Points**, lower = **5 Points**.
+     - **Budget**: Price `<= 70%` of budget = **25 Points**, `<= 90%` = **20 Points**, `<= 100%` = **15 Points**, higher = **5 Points**.
+     - **Performance**: Electric/EV powertrains OR displacement `> 1600cc` OR Turbocharged (Turbo/TSI) engine = **25 Points**; standard displacement `>= 1200cc` = **18 Points**; lower displacement = **8 Points**.
+
+4. **Fuel & Transmission Preference (Max 10 Points)**:
+   - **Fuel Type**: Matches preferred fuel type or preference is set to `Any`: **5 Points** (otherwise 0).
+   - **Transmission**: Matches preferred transmission or preference is set to `Any`: **5 Points** (otherwise 0).
+
+5. **Brand Preference (Max 10 Points)**:
+   - Matches the user's optional preferred car manufacturer (make): **10 Points** (otherwise 0).
 
 ---
 
 ## 5. Search & Discovery Flow
-Standard database search integrates keyword lookups, structured filtering, and server-side pagination utilizing indexing for rapid response times (< 500 ms target).
+Standard database search integrates keyword lookups, structured filtering, and server-side pagination utilizing indexing for rapid response times.
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +204,7 @@ sequenceDiagram
     BE->>DB: Query cars with projection & pagination (Indexed fields: make, model, price, bodyType)
     DB-->>BE: Return page records & total matches count
     BE-->>FE: Return 200 OK with Paginated Schema (page, limit, total, hasNext, data)
-    FE->>FE: Cache result in React Query
+    FE->>FE: Cache result
     FE->>FE: Render Car Grid & Pagination components
     FE-->>User: Update search results page
 ```
@@ -218,7 +226,7 @@ sequenceDiagram
     User->>FE: Click Compare button
     FE->>FE: Check Limit Constraint (<= 4)
     FE->>BE: GET /api/v1/cars/compare?ids=id1,id2,id3
-    BE->>BE: Validate Comparison Request (CAR_002 / CAR_003)
+    BE->>BE: Validate Comparison Request
     BE->>DB: Fetch details for specified Car IDs
     DB-->>BE: Return Car documents
     BE->>BE: Align specifications & compute differences / best value indicators
@@ -251,7 +259,7 @@ sequenceDiagram
         BE->>DB: Update User Wishlist Array (users.wishlist)
         DB-->>BE: Acknowledge update & return updated array
         BE-->>FE: Return 200 OK + Updated Wishlist references
-        FE->>FE: Dispatch Redux action (update local wishlist store)
+        FE->>FE: Dispatch action (update local wishlist store)
         FE->>FE: Refresh UI state (update Wishlist indicator icon)
         FE-->>User: Visual confirmation (heart active/inactive)
     end
@@ -260,7 +268,7 @@ sequenceDiagram
 ---
 
 ## 8. Refresh Token Flow
-To maintain session security without sacrificing user experience, expired short-lived JWT access tokens are transparently refreshed using secure HttpOnly cookies.
+To maintain session security without sacrificing user experience, access tokens are transparently verified. If the token becomes stale or invalid (e.g. database reset), a global Axios interceptor intercepts the 401 error, purges user/auth state from context and local storage, and prompts the login modal.
 
 ```mermaid
 sequenceDiagram
@@ -272,25 +280,11 @@ sequenceDiagram
     FE->>AX: Call protected API (e.g., GET /api/v1/wishlist)
     AX->>BE: Forward request with Bearer JWT (Expired Access Token)
     BE->>BE: Verify JWT (Token expired check)
-    BE-->>AX: Return 401 Unauthorized (AUTH_002 - Token expired)
+    BE-->>AX: Return 401 Unauthorized
     
-    Note over AX,BE: Interceptor catches 401 error, pauses original request
-    
-    AX->>BE: POST /api/v1/auth/refresh (HttpOnly Refresh Token sent in cookies)
-    BE->>BE: Validate Refresh Token (Check database validity & signatures)
-    
-    alt Refresh Token Valid
-        BE->>BE: Generate New JWT Access Token
-        BE-->>AX: Return 200 OK + New Access Token
-        AX->>AX: Update Access Token in memory
-        AX->>BE: Re-send original request with New Access Token
-        BE-->>AX: Return 200 OK (Protected Data)
-        AX-->>FE: Deliver API response
-    else Refresh Token Expired or Revoked
-        BE-->>AX: Return 401/403 Unauthorized
-        AX->>FE: Clear Auth state (Redux) & Redirect to Login Page
-        FE-->>User: Prompt Session Expired - Login Required
-    end
+    Note over AX,BE: Interceptor catches 401 error, purges stale state, prompts login
+    AX->>FE: Reset Auth Context & Local Storage
+    FE-->>User: Display Login Modal Interface
 ```
 
 ---
@@ -341,21 +335,20 @@ graph TD
     PR --> CI[GitHub Actions Pipeline Triggers]
     
     %% CI Steps
-    CI --> Install[1. Install Dependencies & Cache Packages]
+    CI --> Install[1. Install Dependencies]
     Install --> Lint[2. Run ESLint Code Audit]
     Lint --> TypeCheck[3. TypeScript Compile Check]
-    TypeCheck --> Unit[4. Run Unit Tests via Jest]
+    TypeCheck --> Unit[4. Run Unit Tests via Mocha]
     Unit --> Integration[5. Run Integration Tests via Supertest]
-    Integration --> Audit[6. Dependency Audit npm audit & Secret Scan]
-    Audit --> BuildCheck[7. Build Production App & Docker Images]
+    Integration --> Audit[6. Dependency Audit npm audit]
+    Audit --> BuildCheck[7. Build Production App]
     
     BuildCheck --> CodeReview[8. Code Review and Approval]
     CodeReview --> Merge[Merge PR into target branch]
     
     %% CD Deploy Steps
     Merge --> Deploy[CD Deployment Pipeline]
-    Deploy --> Vercel[Deploy React Frontend to Vercel]
-    Deploy --> Railway[Deploy Express Backend to Railway]
+    Deploy --> Railway[Deploy App to Railway]
     Deploy --> HealthCheck[Verify Health Endpoint GET /health]
     HealthCheck --> Production([Application Online & Verified])
 ```

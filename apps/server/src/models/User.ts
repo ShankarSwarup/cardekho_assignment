@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { User as IUser } from '@automatch/types';
+import { User as IUser } from '../types/index.js';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new Schema<IUser>({

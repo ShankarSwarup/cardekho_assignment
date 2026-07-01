@@ -117,6 +117,28 @@ export const toggleWishlist = asyncHandler(async (req: Request, res: Response) =
 });
 
 /**
+ * Retrieve user's saved wishlist cars from the backend database.
+ */
+export const getWishlist = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  const user = await carService.getWishlist(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      code: 'AUTH_003',
+      message: 'User not found',
+      errors: [],
+      traceId: req.traceId
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: 'Wishlist retrieved successfully',
+    data: user.wishlist
+  });
+});
+
+/**
  * Retrieve unique categories (makes, fuelTypes, transmissions, bodyTypes)
  * from the database to feed frontend filters dynamically.
  */

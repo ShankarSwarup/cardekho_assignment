@@ -29,7 +29,7 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017/automatch
       - JWT_SECRET=supersecretaccesskey12345!
       - JWT_REFRESH_SECRET=supersecretrefreshkey54321!
-      - CLIENT_URL=http://localhost:3000
+      - CLIENT_URL=https://cardekho-assignment-client.vercel.app
       - NODE_ENV=development
     depends_on:
       mongodb:

@@ -13,9 +13,7 @@ export const Header = () => {
                                 if (selectedForCompare.length > 0) {
                                     triggerComparisonFetch();
                                 }
-                                else {
-                                    setActiveTab('compare');
-                                }
+                                setActiveTab('compare');
                             }, className: `px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'compare'
                                 ? 'text-slate-900 bg-slate-100 border border-slate-200/40 shadow-sm'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`, children: ["Compare (", selectedForCompare.length, ")"] }), _jsxs("button", { onClick: () => setActiveTab('wishlist'), className: `px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-1 ${activeTab === 'wishlist'

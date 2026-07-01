@@ -47,9 +47,8 @@ export const Header: React.FC = () => {
             onClick={() => {
               if (selectedForCompare.length > 0) {
                 triggerComparisonFetch();
-              } else {
-                setActiveTab('compare');
               }
+              setActiveTab('compare');
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === 'compare'

@@ -6,7 +6,7 @@ This package (`apps/client`) runs the interactive glassmorphism dashboard built 
 
 ## 1. Directory Structure
 
-*   **[`src/App.tsx`](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/apps/client/src/App.tsx)**: Single-page application entrypoint containing global state, Tailwind theme wrappers, Axios configuration interceptors, catalog filters, the Smart Recommendation Wizard form, and comparison matrices.
+*   **[`src/App.tsx`](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/apps/client/src/App.tsx)**: Single-page application entrypoint containing global state, Tailwind theme wrappers, Axios configuration interceptors, catalog filters, the Recommendation Wizard form, and comparison matrices.
 *   **[`src/main.tsx`](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/apps/client/src/main.tsx)**: Bootstrap rendering mounting React onto the browser DOM.
 *   **[`src/index.css`](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/apps/client/src/index.css)**: Implements CSS custom variables for glassmorphism panels, card shadow elevations, and backdrop blurs.
 
@@ -42,8 +42,8 @@ All functions are declared within functional scopes for state encapsulation:
 *   **`toggleCompare(car)`**: Manages a local comparison state array (`compareList`). Enforces a strict specification layout limit of maximum 4 vehicles.
 *   **`renderCompareMatrix()`**: Evaluates and prints structural side-by-side spec properties (price, safety rating, engine capacity, mileage, torque) for visual contrast.
 
-#### 3. Smart Recommendation Wizard
-*   **`handleWizardSubmit(preferences)`**: Submits structured questionnaire values (budget, daily mileage, seating capacity, fuel, transmission, priority) to the `/recommendations` API. Saves results to local state hooks (`aiRecommendations` and `advisorExplanation`) for display.
+#### 3. Recommendation Wizard
+*   **`handleWizardSubmit(preferences)`**: Submits structured questionnaire values (budget, daily mileage, seating capacity, fuel, transmission, priority) to the `/recommendations` API. Saves results to local state hooks for display.
 
 ---
 

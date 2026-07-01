@@ -5,14 +5,13 @@
   "private": true,
   "workspaces": [
     "apps/client",
-    "apps/server",
-    "packages/*"
+    "apps/server"
   ],
   "scripts": {
     "dev:server": "npm run dev --workspace=apps/server",
     "dev:client": "npm run dev --workspace=apps/client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npm run build --workspace=@automatch/types && npm run build --workspace=@automatch/utils && npm run build --workspace=@automatch/server && npm run build --workspace=@automatch/client",
+    "build": "npm run build --workspace=@automatch/server && npm run build --workspace=@automatch/client",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
   },

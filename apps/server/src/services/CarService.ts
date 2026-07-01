@@ -1,6 +1,6 @@
 import { CarRepository, CarQueryFilters } from '../repositories/CarRepository.js';
 import { UserRepository } from '../repositories/UserRepository.js';
-import { Car as ICar, User as IUser } from '@automatch/types';
+import { Car as ICar, User as IUser } from '../types/index.js';
 
 export class CarService {
   private carRepository = new CarRepository();
@@ -38,6 +38,7 @@ export class CarService {
       throw new Error('Maximum comparison limit is 4 cars');
     }
     const cars = await this.carRepository.findByIds(ids);
+    console.log(cars,ids);
     if (cars.length === 0) {
       throw new Error('No valid vehicles found for comparison');
     }
@@ -83,6 +84,10 @@ export class CarService {
     } else {
       return this.userRepository.removeFromWishlist(userId, carId);
     }
+  }
+
+  async getWishlist(userId: string): Promise<IUser | null> {
+    return this.userRepository.findById(userId);
   }
 
   /**

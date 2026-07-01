@@ -13,6 +13,7 @@ interface AuthContextType {
   setShowLoginModal: (show: boolean) => void;
   setAuthError: (error: string) => void;
   handleLogin: (e: React.FormEvent | null) => Promise<void>;
+  handleRegister: (fullName: string, email: string, password: string) => Promise<boolean>;
   handleLogout: () => Promise<void>;
   setUser: (user: any) => void;
 }
@@ -99,6 +100,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const handleRegister = async (fullName: string, email: string, password: string): Promise<boolean> => {
+    setAuthError('');
+    try {
+      const res = await axios.post(`${BASE_URL}/auth/register`, {
+        fullName,
+        email,
+        password
+      });
+
+      if (res.data.success) {
+        // Automatically login user after successful signup
+        const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
+          email,
+          password
+        });
+
+        if (loginRes.data.success) {
+          const loggedUser = loginRes.data.data.user;
+          const loggedToken = loginRes.data.data.accessToken;
+
+          setUser(loggedUser);
+          setToken(loggedToken);
+          localStorage.setItem('token', loggedToken);
+          localStorage.setItem('user', JSON.stringify(loggedUser));
+
+          setLoginEmail('');
+          setLoginPassword('');
+          setShowLoginModal(false);
+          return true;
+        }
+      }
+      return false;
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || 
+                     (err.response?.data?.errors && err.response.data.errors[0]?.message) ||
+                     'Registration failed';
+      setAuthError(errMsg);
+      return false;
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await axios.post(`${BASE_URL}/auth/logout`);
@@ -126,6 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setShowLoginModal,
         setAuthError,
         handleLogin,
+        handleRegister,
         handleLogout,
         setUser
       }}

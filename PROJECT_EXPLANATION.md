@@ -112,7 +112,7 @@ const reviewSchema = new Schema<IReview>({
 ## 4. Folder Structure
 
 ```
-automatch-pro (root)
+cardekho_assignment (root)
 ├── .github
 │   └── workflows
 │       └── ci.yml                     <-- CI/CD Monorepo Pipeline Workflow
@@ -128,7 +128,7 @@ automatch-pro (root)
 │   │   │   │   ├── CarDetailsModal.tsx<-- Popup modal with reviews, specs, carousel
 │   │   │   │   └── LoginModal.tsx     <-- Login portal
 │   │   │   ├── contexts               <-- State context providers
-│   │   │   │   ├── AuthContext.tsx    <-- Login, logout, local session storage
+│   │   │   │   ├── AuthContext.tsx    <-- Login, logout, local session storage (with Axios interceptor)
 │   │   │   │   └── CarContext.tsx     <-- Fetching, filtering, wishlist, comparison state
 │   │   │   ├── App.tsx                <-- Roots, wrapping providers
 │   │   │   └── index.css              <-- Global light theme styling
@@ -137,6 +137,8 @@ automatch-pro (root)
 │       │   ├── controllers            <-- API controller layers with documentation comments
 │       │   ├── repositories           <-- CarRepository (supports performance filter regex)
 │       │   ├── routes                 <-- /filters and CRUD routes
+│       │   ├── types                  <-- TypeScript interfaces
+│       │   ├── utils                  <-- Database seed and validations logic
 │       │   ├── tests                  <-- Mocha + Chai unit test suite
 │       │   │   ├── auth.test.ts
 │       │   │   ├── car.test.ts
@@ -147,7 +149,7 @@ automatch-pro (root)
 
 ## 5. Coding Standards
 
-1. **Strict Type Safety**: TypeScript interfaces used for all schemas, filters, and states across client/server.
+1. **Strict Type Safety**: TypeScript interfaces used for all schemas, filters, and states inside self-contained server folders.
 2. **ESM Modules**: Server imports utilize explicit file suffixes (e.g. `import app from './app.js'`).
 3. **API Documentation**: Documented controller handlers using detailed JSDoc explaining parameters, return payloads, and exceptions.
 4. **Modularity**: Components broken down into logical React files avoiding monolithic states.
@@ -156,7 +158,6 @@ automatch-pro (root)
 
 ## 6. Security Measures
 
-* **HTTP-Only Refresh Token Cookie**: Keeps session tokens safe from JavaScript access (XSS defense).
 * **JWT Access Authorization**: Route guard middlewares verifying JWT header signatures.
 * **Bcrypt Password Hashing**: Pre-save mongoose hooks hashing passwords with salt rounds.
 * **Zod Validation**: Validates query params and post bodies prior to handling.
@@ -187,5 +188,36 @@ automatch-pro (root)
 
 * **IP Whitelisting / Offline Mocks**: Tests automatically connect to local test MongoDB clusters or warn gracefully on lack of connection.
 * **Empty search results**: Handled inside `BrowseCars` grid showing instructions and reset keys.
-* **Single vs Multi-image Carousel**: Handles arrays containing a single string by hiding carousel controls and just rendering the image.
-* **JWT Session Persistence**: Restores session details automatically using `localStorage` lookup upon reload.
+* **JWT Session Persistence & 401 Interceptors**: Restores session details automatically using `localStorage` lookup upon reload. Any stale session authentication is caught by the Axios global interceptor and automatically logged out to prevent page crashing.
+
+---
+
+## 9. Smart Advisor Recommendation Scoring Logic
+
+The recommendation engine calculates a matching score out of a maximum of **100 Points** for each candidate car using five weighted rules:
+
+1. **Price Match (Max 35 Points)**:
+   - If the price is within the user's budget:
+     - **35 Points** if the price-to-budget ratio is `>= 0.6` (closer matching segments get higher relevance).
+     - Otherwise (too cheap/low-end segments): `15 + Math.round(20 * (ratio / 0.6))` Points (scaled, minimum **15 Points**).
+   - If the price exceeds the budget but is within `1.2 * budget` (a 20% stretch limit):
+     - The score degrades based on overshoot: `20 - Math.round(15 * excessRatio)` Points.
+   - If the price is above `1.2 * budget`: **0 Points**.
+
+2. **Seating Capacity Fit (Max 20 Points)**:
+   - Matches the user's family size exactly to the vehicle seating capacity: **20 Points**.
+   - Capacity exceeds the family size (larger space capacity): **15 Points**.
+   - Capacity is less than the family size: **0 Points**.
+
+3. **User Priority Metric Boost (Max 25 Points)**:
+   - **Safety**: 5-star NCAP = **25 Points**, 4-star = **18 Points**, 3-star = **10 Points**, lower = **3 Points**.
+   - **Mileage**: `>= 22 km/l` = **25 Points**, `>= 18` = **20 Points**, `>= 15` = **12 Points**, lower = **5 Points**.
+   - **Budget**: Price `<= 70%` of budget = **25 Points**, `<= 90%` = **20 Points**, `<= 100%` = **15 Points**, higher = **5 Points**.
+   - **Performance**: EV/Electric OR CC displacement `> 1600cc` OR Turbocharged = **25 Points**; cc `>= 1200` = **18 Points**; CC `< 1200` = **8 Points**.
+
+4. **Fuel and Transmission Fit (Max 10 Points)**:
+   - **Fuel Type**: Matches preferred choice (or is `Any`): **5 Points** (otherwise 0).
+   - **Transmission**: Matches preferred choice (or is `Any`): **5 Points** (otherwise 0).
+
+5. **Brand Preference (Max 10 Points)**:
+   - Car make matches the user's preferred manufacturer keyword: **10 Points** (otherwise 0).

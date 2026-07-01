@@ -1,5 +1,5 @@
 import { UserModel } from '../models/User.js';
-import { User as IUser } from '@automatch/types';
+import { User as IUser } from '../types/index.js';
 
 export class UserRepository {
   async findById(id: string): Promise<IUser | null> {

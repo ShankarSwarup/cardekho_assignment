@@ -1,6 +1,6 @@
 import { CarRepository } from '../repositories/CarRepository.js';
 import { RecommendationRepository } from '../repositories/RecommendationRepository.js';
-import { RecommendationPreferences, RecommendationResult, RecommendationSession } from '@automatch/types';
+import { RecommendationPreferences, RecommendationResult, RecommendationSession } from '../types/index.js';
 
 interface ScoredCandidate {
   car: {

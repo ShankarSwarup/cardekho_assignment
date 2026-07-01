@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, MessageSquare, Star, Trash2, AlertCircle, Heart, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCars } from '../contexts/CarContext';
@@ -27,11 +27,22 @@ export const CarDetailsModal: React.FC = () => {
 
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
+  // Reset carousel index to 0 whenever the selected vehicle changes
+  useEffect(() => {
+    setCurrentImgIdx(0);
+  }, [selectedCar?._id]);
+
   if (!selectedCar) return null;
 
-  const images = selectedCar.images && selectedCar.images.length > 0
-    ? selectedCar.images
-    : ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'];
+  // Build resilient image list (handles arrays, single strings, and empty cases)
+  let images: string[] = [];
+  if (Array.isArray(selectedCar.images) && selectedCar.images.length > 0) {
+    images = selectedCar.images;
+  } else if (typeof selectedCar.images === 'string' && selectedCar.images) {
+    images = [selectedCar.images];
+  } else {
+    images = ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'];
+  }
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();

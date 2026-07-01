@@ -1,5 +1,6 @@
+import { Types } from 'mongoose';
 import { CarModel } from '../models/Car.js';
-import { Car as ICar } from '@automatch/types';
+import { Car as ICar } from '../types/index.js';
 
 export interface CarQueryFilters {
   keyword?: string;
@@ -14,11 +15,14 @@ export interface CarQueryFilters {
 
 export class CarRepository {
   async findById(id: string): Promise<ICar | null> {
-    return CarModel.findById(id).exec();
+    let car = await CarModel.findById(new Types.ObjectId(id)).lean().exec();
+    return car;
   }
 
   async findByIds(ids: string[]): Promise<ICar[]> {
-    return CarModel.find({ _id: { $in: ids } }).exec();
+    let cars = await CarModel.find({ _id: { $in: ids.map(id => new Types.ObjectId(id)) } }).lean().exec();
+    console.log(cars,ids);
+    return cars;
   }
 
   async findWithPagination(
