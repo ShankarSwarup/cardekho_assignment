@@ -1,0 +1,22 @@
+{
+  "name": "automatch-pro",
+  "version": "1.0.0",
+  "description": "AutoMatch Pro Enterprise Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/client",
+    "apps/server",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=apps/server",
+    "dev:client": "npm run dev --workspace=apps/client",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
