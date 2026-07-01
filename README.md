@@ -67,6 +67,14 @@ We built a highly responsive single-page application (SPA) centered on user-dire
 3. **Advanced Security Upgrades**: Implementing API brute-force limits on login routes and token blocklists for absolute logouts.
 4. **CI/CD Deployment Automation**: Automating Vercel/Railway deployments through GitHub Actions workflows.
 
+## 📂 Project Sub-Documentation
+To keep the codebase structure and features understandable, documentation is consolidated into four dedicated markdown files at the root of the project:
+
+- **[frontend.md](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/frontend.md)**: Explains the React + Vite modular design system, the feature-centric folder organization, the custom Toast provider notification system, and bundle-splitting optimizations.
+- **[backend.md](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/backend.md)**: Documents database model schemas, connection constraints, strict environment variable checking, route configurations, inspection debugging hooks, and test parameters.
+- **[features.md](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/features.md)**: Details the active features (Advanced Sidebar Catalog filters, 4-vehicle Specification Comparison matrix, persistent Profile Wishlist, customer reviews) and handled edge cases (image indexing, price boundaries validation, Jwt race conditions).
+- **[ai.md](file:///C:/Users/badri/OneDrive/Desktop/cardekho_assignment/ai.md)**: Documents AI collaboration, highlighting delegated tasks (datasets mockups, bulk context updates, testing templates) and workarounds for compilation or runtime limits (Docker monorepos, Carousel slide overrides, Axios header race conditions).
+
 ---
 
 ## 🚀 Quick Start & Execution Commands
