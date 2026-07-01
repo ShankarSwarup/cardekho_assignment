@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { CarModel } from '../models/Car.js';
 import { UserModel } from '../models/User.js';
 import { ReviewModel } from '../models/Review.js';
-import { RecommendationModel } from '../models/Recommendation.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -226,7 +225,10 @@ const generateMockCars = (count: number) => {
 };
 
 const seed = async () => {
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/automatch';
+  if (!process.env.MONGODB_URI) {
+    throw new Error('MONGODB_URI must be defined in env variables');
+  }
+  const MONGODB_URI = process.env.MONGODB_URI;
   try {
     console.log('Connecting to database...');
     await mongoose.connect(MONGODB_URI);
@@ -236,7 +238,6 @@ const seed = async () => {
     await CarModel.deleteMany({});
     await UserModel.deleteMany({});
     await ReviewModel.deleteMany({});
-    await RecommendationModel.deleteMany({});
     console.log('Collections cleared.');
 
     console.log('Generating 400 real-world vehicles...');

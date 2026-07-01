@@ -11,7 +11,9 @@
     "dev:server": "npm run dev --workspace=apps/server",
     "dev:client": "npm run dev --workspace=apps/client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "debug": "npm run debug --workspace=@automatch/server",
     "build": "npm run build --workspace=@automatch/server && npm run build --workspace=@automatch/client",
+    "build:watch": "concurrently \"npm run build:watch --workspace=@automatch/server\" \"npm run build:watch --workspace=@automatch/client\"",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
   },

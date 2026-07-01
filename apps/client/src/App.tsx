@@ -1,22 +1,23 @@
 import React, { Suspense } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
-import { CarProvider, useCars } from './contexts/CarContext';
+import { AuthProvider } from './features/auth/AuthContext';
+import { CarProvider, useCars } from './features/cars/CarContext';
+import { ToastProvider } from './features/toast/ToastContext';
 import { Header } from './components/Header';
-import { Overview } from './components/Overview';
-import { BrowseCars } from './components/BrowseCars';
+import { Overview } from './features/cars/Overview';
+import { BrowseCars } from './features/cars/BrowseCars';
 
 // Lazy loading views and modal overlays for optimized bundle splitting and caching
 const Compare = React.lazy(() =>
-  import('./components/Compare').then((m) => ({ default: m.Compare }))
+  import('./features/compare/Compare').then((m) => ({ default: m.Compare }))
 );
 const Wishlist = React.lazy(() =>
-  import('./components/Wishlist').then((m) => ({ default: m.Wishlist }))
+  import('./features/wishlist/Wishlist').then((m) => ({ default: m.Wishlist }))
 );
 const CarDetailsModal = React.lazy(() =>
-  import('./components/CarDetailsModal').then((m) => ({ default: m.CarDetailsModal }))
+  import('./features/cars/CarDetailsModal').then((m) => ({ default: m.CarDetailsModal }))
 );
 const LoginModal = React.lazy(() =>
-  import('./components/LoginModal').then((m) => ({ default: m.LoginModal }))
+  import('./features/auth/LoginModal').then((m) => ({ default: m.LoginModal }))
 );
 
 const AppContent: React.FC = () => {
@@ -48,10 +49,12 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CarProvider>
-        <AppContent />
-      </CarProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <CarProvider>
+          <AppContent />
+        </CarProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

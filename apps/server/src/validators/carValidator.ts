@@ -5,6 +5,7 @@ export const carQuerySchema = z.object({
     page: z.string().optional().transform(val => val ? parseInt(val) : 1),
     limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
     brand: z.string().optional(),
+    model: z.string().optional(),
     keyword: z.string().optional(),
     fuel: z.string().optional(),
     transmission: z.string().optional(),
@@ -12,6 +13,11 @@ export const carQuerySchema = z.object({
     minPrice: z.string().optional().transform(val => val ? parseInt(val) : undefined),
     maxPrice: z.string().optional().transform(val => val ? parseInt(val) : undefined),
     performance: z.string().optional(),
+    safetyRating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+    seatingCapacity: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+    minYear: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+    maxYear: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+    minMileage: z.string().optional().transform(val => val ? parseInt(val) : undefined),
     sortBy: z.string().optional().default('price'),
     sortOrder: z.enum(['asc', 'desc']).optional().default('asc')
   })

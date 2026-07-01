@@ -9,15 +9,55 @@ const carService = new CarService();
  * Filters include: brand, fuel, transmission, minPrice, maxPrice, bodyType, keyword, and performance.
  */
 export const getCars = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, brand, fuel, transmission, minPrice, maxPrice, bodyType, sortBy, sortOrder, keyword, performance } = req.query as any;
+  const {
+    page,
+    limit,
+    brand,
+    model,
+    fuel,
+    transmission,
+    minPrice,
+    maxPrice,
+    bodyType,
+    sortBy,
+    sortOrder,
+    keyword,
+    performance,
+    safetyRating,
+    seatingCapacity,
+    minYear,
+    maxYear,
+    minMileage
+  } = req.query as any;
 
   const parsedPage = parseInt(page as string, 10) || 1;
   const parsedLimit = parseInt(limit as string, 10) || 6;
   const parsedMinPrice = minPrice ? parseFloat(minPrice as string) : undefined;
   const parsedMaxPrice = maxPrice ? parseFloat(maxPrice as string) : undefined;
 
+  const parsedSafetyRating = safetyRating ? parseInt(safetyRating as string, 10) : undefined;
+  const parsedSeatingCapacity = seatingCapacity ? parseInt(seatingCapacity as string, 10) : undefined;
+  const parsedMinYear = minYear ? parseInt(minYear as string, 10) : undefined;
+  const parsedMaxYear = maxYear ? parseInt(maxYear as string, 10) : undefined;
+  const parsedMinMileage = minMileage ? parseFloat(minMileage as string) : undefined;
+
   const result = await carService.getCars(
-    { brand, fuel, transmission, minPrice: parsedMinPrice, maxPrice: parsedMaxPrice, bodyType, keyword, performance },
+    {
+      brand,
+      model,
+      fuel,
+      transmission,
+      minPrice: parsedMinPrice,
+      maxPrice: parsedMaxPrice,
+      bodyType,
+      keyword,
+      performance,
+      safetyRating: parsedSafetyRating,
+      seatingCapacity: parsedSeatingCapacity,
+      minYear: parsedMinYear,
+      maxYear: parsedMaxYear,
+      minMileage: parsedMinMileage
+    },
     parsedPage,
     parsedLimit,
     sortBy,

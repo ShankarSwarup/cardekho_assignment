@@ -5,12 +5,18 @@ import { Car as ICar } from '../types/index.js';
 export interface CarQueryFilters {
   keyword?: string;
   brand?: string;
+  model?: string;
   fuel?: string;
   transmission?: string;
   minPrice?: number;
   maxPrice?: number;
   bodyType?: string;
   performance?: string;
+  safetyRating?: number;
+  seatingCapacity?: number;
+  minYear?: number;
+  maxYear?: number;
+  minMileage?: number;
 }
 
 export class CarRepository {
@@ -44,6 +50,9 @@ export class CarRepository {
     if (filters.brand && filters.brand !== '') {
       query.make = { $regex: new RegExp(filters.brand, 'i') };
     }
+    if (filters.model && filters.model !== '') {
+      query.model = { $regex: new RegExp(filters.model, 'i') };
+    }
     if (filters.fuel && filters.fuel !== 'Any') {
       query.fuelType = filters.fuel;
     }
@@ -57,6 +66,20 @@ export class CarRepository {
       query.price = {};
       if (filters.minPrice !== undefined) query.price.$gte = filters.minPrice;
       if (filters.maxPrice !== undefined) query.price.$lte = filters.maxPrice;
+    }
+    if (filters.safetyRating !== undefined && filters.safetyRating > 0) {
+      query.safetyRating = { $gte: filters.safetyRating };
+    }
+    if (filters.seatingCapacity !== undefined && filters.seatingCapacity > 0) {
+      query.seatingCapacity = filters.seatingCapacity;
+    }
+    if (filters.minYear !== undefined || filters.maxYear !== undefined) {
+      query.year = {};
+      if (filters.minYear !== undefined) query.year.$gte = filters.minYear;
+      if (filters.maxYear !== undefined) query.year.$lte = filters.maxYear;
+    }
+    if (filters.minMileage !== undefined && filters.minMileage > 0) {
+      query.mileage = { $gte: filters.minMileage };
     }
     if (filters.performance && filters.performance !== 'Any') {
       if (filters.performance === 'Eco') {
@@ -138,16 +161,44 @@ export class CarRepository {
 
   async getDistinctFilters(): Promise<{
     brands: string[];
+    models: string[];
+    brandModels: Record<string, string[]>;
     fuelTypes: string[];
     transmissions: string[];
     bodyTypes: string[];
+    seatingCapacities: number[];
+    safetyRatings: number[];
+    years: number[];
   }> {
-    const [brands, fuelTypes, transmissions, bodyTypes] = await Promise.all([
+    const [brands, models, fuelTypes, transmissions, bodyTypes, seatingCapacities, safetyRatings, years, brandModelPairs] = await Promise.all([
       CarModel.distinct('make').exec(),
+      CarModel.distinct('model').exec(),
       CarModel.distinct('fuelType').exec(),
       CarModel.distinct('transmission').exec(),
-      CarModel.distinct('bodyType').exec()
+      CarModel.distinct('bodyType').exec(),
+      CarModel.distinct('seatingCapacity').exec(),
+      CarModel.distinct('safetyRating').exec(),
+      CarModel.distinct('year').exec(),
+      CarModel.aggregate([
+        { $group: { _id: '$make', models: { $addToSet: '$model' } } }
+      ]).exec()
     ]);
-    return { brands, fuelTypes, transmissions, bodyTypes };
+
+    const brandModelsMap: Record<string, string[]> = {};
+    brandModelPairs.forEach((item: any) => {
+      brandModelsMap[item._id] = item.models.sort();
+    });
+
+    return {
+      brands: brands.sort(),
+      models: models.sort(),
+      brandModels: brandModelsMap,
+      fuelTypes: fuelTypes.sort(),
+      transmissions: transmissions.sort(),
+      bodyTypes: bodyTypes.sort(),
+      seatingCapacities: seatingCapacities.sort((a, b) => a - b),
+      safetyRatings: safetyRatings.sort((a, b) => a - b),
+      years: years.sort((a, b) => b - a)
+    };
   }
 }

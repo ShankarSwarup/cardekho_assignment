@@ -6,7 +6,9 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "debug": "node --inspect=0.0.0.0:9229 --import=tsx src/server.ts",
     "build": "tsc",
+    "build:watch": "tsc -w",
     "start": "node dist/server.js",
     "seed": "tsx src/utils/seed.ts",
     "test": "mocha --import=tsx src/tests/**/*.test.ts --timeout 10000 --exit"

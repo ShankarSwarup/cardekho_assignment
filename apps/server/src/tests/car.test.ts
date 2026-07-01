@@ -46,15 +46,26 @@ describe('Cars API Endpoint Tests (Mocked DB)', () => {
       if (filters.performance === 'High') {
         return { cars: [mockSUV], total: 1 };
       }
+      if (filters.model === 'Swift') {
+        return { cars: [mockCar], total: 1 };
+      }
       return { cars: [mockCar, mockSUV], total: 2 };
     };
 
     CarRepository.prototype.getDistinctFilters = async function() {
       return {
         brands: ['Maruti Suzuki', 'Toyota'],
+        models: ['Swift', 'Fortuner'],
+        brandModels: {
+          'Maruti Suzuki': ['Swift'],
+          'Toyota': ['Fortuner']
+        },
         fuelTypes: ['Petrol', 'Diesel'],
         transmissions: ['Automatic', 'Manual'],
-        bodyTypes: ['Hatchback', 'SUV']
+        bodyTypes: ['Hatchback', 'SUV'],
+        seatingCapacities: [5, 7],
+        safetyRatings: [3, 5],
+        years: [2023, 2024]
       };
     };
 
@@ -110,6 +121,13 @@ describe('Cars API Endpoint Tests (Mocked DB)', () => {
     expect(res.status).to.equal(200);
     expect(res.body.success).to.be.true;
     expect(res.body.data[0].model).to.equal('Swift');
+  });
+
+  it('should filter cars by specific model (e.g. Swift)', async () => {
+    const res = await request(app).get('/api/v1/cars?model=Swift');
+    expect(res.status).to.equal(200);
+    expect(res.body.success).to.be.true;
+    expect(res.body.data.cars[0].model).to.equal('Swift');
   });
 
   it('should compare specifications of selected cars', async () => {

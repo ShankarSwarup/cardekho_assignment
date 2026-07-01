@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, Heart } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useCars } from '../contexts/CarContext';
+import { useAuth } from '../features/auth/AuthContext';
+import { useCars } from '../features/cars/CarContext';
 
 export const Header: React.FC = () => {
   const { user, handleLogout, setShowLoginModal } = useAuth();
