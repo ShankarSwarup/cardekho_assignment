@@ -64,7 +64,8 @@ export const CarProvider = ({ children }) => {
     const [reviewText, setReviewText] = useState('');
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
     const [reviewError, setReviewError] = useState('');
-    const BASE_URL = '/api/v1';
+    const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : '/api/v1';
+    console.log(BASE_URL, import.meta.env);
     // Validate price bounds
     useEffect(() => {
         const minVal = filterMinPrice ? parseFloat(filterMinPrice) : 0;

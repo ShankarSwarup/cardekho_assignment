@@ -28,7 +28,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const BASE_URL = '/api/v1';
+  const BASE_URL = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : '/api/v1';
 
   // Load user session from local storage on mount
   useEffect(() => {

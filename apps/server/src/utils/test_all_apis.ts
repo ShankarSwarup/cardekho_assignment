@@ -1,7 +1,7 @@
 import axios from 'axios';
 import mongoose from 'mongoose';
 
-const API_URL = 'http://localhost:5000/api/v1';
+const API_URL = `${process.env.SERVER_URL}/api/v1`;
 
 const runValidationSuite = async () => {
   console.log('==================================================');

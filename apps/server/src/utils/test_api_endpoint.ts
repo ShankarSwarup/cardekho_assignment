@@ -3,7 +3,7 @@ import axios from 'axios';
 const runTest = async () => {
   try {
     console.log('1. Attempting login to obtain JWT access token...');
-    const loginRes = await axios.post('http://localhost:5000/api/v1/auth/login', {
+    const loginRes = await axios.post('${process.env.SERVER_URL}/api/v1/auth/login', {
       email: 'john@example.com',
       password: 'Password@123'
     });
@@ -25,7 +25,7 @@ const runTest = async () => {
 
     console.log('2. Making authenticated POST request to /api/v1/recommendations...');
     const recRes = await axios.post(
-      'http://localhost:5000/api/v1/recommendations',
+      `${process.env.SERVER_URL}/api/v1/recommendations`,
       dummyPreferences,
       {
         headers: {
